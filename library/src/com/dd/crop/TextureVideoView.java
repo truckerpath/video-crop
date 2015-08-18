@@ -419,4 +419,8 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     public boolean isPlaying(){
         return mMediaPlayer.isPlaying();
     }
+
+    public void releasePlayer(){
+        mMediaPlayer.release();
+    }
 }
