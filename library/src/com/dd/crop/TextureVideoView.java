@@ -212,11 +212,13 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    mState = State.END;
-                    log("Video has ended.");
+                    if(!mp.isLooping()) {
+                        mState = State.END;
+                        log("Video has ended.");
 
-                    if (mListener != null) {
-                        mListener.onVideoEnd();
+                        if (mListener != null) {
+                            mListener.onVideoEnd();
+                        }
                     }
                 }
             });
@@ -415,6 +417,6 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     }
 
     public boolean isPlaying(){
-        return mState == State.PLAY;
+        return mMediaPlayer.isPlaying();
     }
 }
