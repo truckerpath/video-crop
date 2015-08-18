@@ -413,4 +413,8 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
     }
+
+    public boolean isPlaying(){
+        return mState == State.PLAY;
+    }
 }
