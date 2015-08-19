@@ -288,7 +288,12 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             return;
         }
 
-        if (mState == State.END || mState == State.STOP) {
+        if(mState == State.END ){
+            log("play() called but video ended");
+            return;
+        }
+
+        if (mState == State.STOP) {
             log("play() was called but video already ended, starting over.");
             mState = State.PLAY;
             mMediaPlayer.seekTo(0);
@@ -392,12 +397,14 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-        Surface surface = new Surface(surfaceTexture);
-        mMediaPlayer.setSurface(surface);
-        mIsViewAvailable = true;
-        if (mIsDataSourceSet && mIsPlayCalled && mIsVideoPrepared) {
-            log("View is available and play() was called.");
-            play();
+        if(mState != State.END) {
+            Surface surface = new Surface(surfaceTexture);
+            mMediaPlayer.setSurface(surface);
+            mIsViewAvailable = true;
+            if (mIsDataSourceSet && mIsPlayCalled && mIsVideoPrepared) {
+                log("View is available and play() was called.");
+                play();
+            }
         }
     }
 
@@ -421,6 +428,8 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     }
 
     public void releasePlayer(){
+        // cannot use media player after this
+        mState = State.END;
         mMediaPlayer.release();
     }
 }
