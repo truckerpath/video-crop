@@ -203,8 +203,10 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
                     new MediaPlayer.OnVideoSizeChangedListener() {
                         @Override
                         public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
-                            mVideoWidth = width;
-                            mVideoHeight = height;
+                            if(!mIsVideoPrepared) {
+                                mVideoWidth = width;
+                                mVideoHeight = height;
+                            }
                             updateTextureViewSize();
                         }
                     }
