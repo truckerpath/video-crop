@@ -92,6 +92,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     }
 
     private void updateTextureViewSize() {
+
         float viewWidth = getWidth();
         float viewHeight = getHeight();
 
@@ -135,6 +136,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
         Matrix matrix = new Matrix();
         matrix.setScale(scaleX, scaleY, pivotPointX, pivotPointY);
+
 
         setTransform(matrix);
     }
@@ -203,7 +205,8 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
                     new MediaPlayer.OnVideoSizeChangedListener() {
                         @Override
                         public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
-                            if(!mIsVideoPrepared) {
+                            Log.e("OnVideo", width + " " + height);
+                            if (!mIsVideoPrepared) {
                                 mVideoWidth = width;
                                 mVideoHeight = height;
                             }
@@ -399,10 +402,15 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+        Log.e("OnVideo", "textureAvailable ");
         if(mState != State.END) {
+
             Surface surface = new Surface(surfaceTexture);
             mMediaPlayer.setSurface(surface);
             mIsViewAvailable = true;
+
+            updateTextureViewSize();
+
             if (mIsDataSourceSet && mIsPlayCalled && mIsVideoPrepared) {
                 log("View is available and play() was called.");
                 play();
@@ -412,16 +420,18 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
+        Log.e("OnVideo","textureSizeChanges");
     }
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        Log.e("OnVideo","textureDestroyed");
         return false;
     }
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+        Log.e("OnVideo","textureUpdated");
 
     }
 
