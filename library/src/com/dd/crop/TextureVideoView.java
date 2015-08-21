@@ -46,6 +46,8 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     private static final String TAG = TextureVideoView.class.getName();
 
     private MediaPlayer mMediaPlayer;
+    private int currentPosition = 0;
+    private boolean haveToSeek = false;
 
     private float mVideoHeight;
     private float mVideoWidth;
@@ -253,6 +255,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
         } catch (SecurityException e) {
             Log.d(TAG, e.getMessage());
         } catch (IllegalStateException e) {
+            e.printStackTrace();
             Log.d(TAG, e.toString());
         }
     }
@@ -304,6 +307,11 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             mMediaPlayer.seekTo(0);
             mMediaPlayer.start();
             return;
+        }
+
+        if(haveToSeek){
+            mMediaPlayer.seekTo(currentPosition);
+            haveToSeek = false;
         }
 
         mState = State.PLAY;
@@ -402,7 +410,6 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-        Log.e("OnVideo", "textureAvailable ");
         if(mState != State.END) {
 
             Surface surface = new Surface(surfaceTexture);
@@ -420,19 +427,18 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-        Log.e("OnVideo","textureSizeChanges");
     }
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        Log.e("OnVideo","textureDestroyed");
-        return false;
+        currentPosition = mMediaPlayer.getCurrentPosition();
+        mMediaPlayer.release();
+        mMediaPlayer = null;
+        return true;
     }
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-        Log.e("OnVideo","textureUpdated");
-
     }
 
     public boolean isPlaying(){
@@ -444,4 +450,9 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
         mState = State.END;
         mMediaPlayer.release();
     }
+
+    public void seekToCurrent(){
+        haveToSeek = true;
+    }
+
 }
