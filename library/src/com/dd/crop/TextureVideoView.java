@@ -410,6 +410,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+        Log.e("OnVideo","Surface Available");
         if(mState != State.END) {
 
             Surface surface = new Surface(surfaceTexture);
@@ -431,10 +432,12 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        Log.e("OnVideo","Surface Destroy");
         currentPosition = mMediaPlayer.getCurrentPosition();
         mMediaPlayer.release();
         mMediaPlayer = null;
-        return true;
+        mIsViewAvailable = false;
+        return false;
     }
 
     @Override
@@ -453,6 +456,10 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     public void seekToCurrent(){
         haveToSeek = true;
+    }
+
+    public boolean isSurfaceAvailable(){
+        return mIsViewAvailable;
     }
 
 }
