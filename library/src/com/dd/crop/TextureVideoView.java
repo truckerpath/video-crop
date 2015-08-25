@@ -462,4 +462,16 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
         return mIsViewAvailable;
     }
 
+    public void muteAudio(){
+        if(mMediaPlayer!= null){
+            mMediaPlayer.setVolume(0,0);
+        }
+    }
+
+    public void unMuteAudio(){
+        if(mMediaPlayer!= null){
+            mMediaPlayer.setVolume(1,1);
+        }
+    }
+
 }
