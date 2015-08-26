@@ -101,17 +101,21 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
         float scaleX = 1.0f;
         float scaleY = 1.0f;
 
+
         if (mVideoWidth > viewWidth && mVideoHeight > viewHeight) {
+            //TODO: need to verify logic for larger video sizes
             scaleX = mVideoWidth / viewWidth;
             scaleY = mVideoHeight / viewHeight;
-        } else if (mVideoWidth < viewWidth && mVideoHeight < viewHeight) {
-            scaleY = viewWidth / mVideoWidth;
-            scaleX = viewHeight / mVideoHeight;
-        } else if (viewWidth > mVideoWidth) {
-            scaleY = (viewWidth / mVideoWidth) / (viewHeight / mVideoHeight);
-        } else if (viewHeight > mVideoHeight) {
+        } else if (mVideoWidth/mVideoHeight > viewWidth/viewHeight) {
+            scaleY = 1f;
             scaleX = (viewHeight / mVideoHeight) / (viewWidth / mVideoWidth);
+        } else {
+            scaleX = 1f;
+            scaleY = (viewWidth / mVideoWidth) / (viewHeight / mVideoHeight);
         }
+
+        Log.d("Video Details",viewHeight+" "+viewWidth);
+
 
         // Calculate pivot points, in our case crop from center
         int pivotPointX;
