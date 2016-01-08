@@ -56,6 +56,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     private boolean mIsViewAvailable;
     private boolean mIsVideoPrepared;
     private boolean mIsPlayCalled;
+    private boolean mPreventPlayback;
 
     private ScaleType mScaleType;
     private State mState;
@@ -155,6 +156,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
         }
         mIsVideoPrepared = false;
         mIsPlayCalled = false;
+        mPreventPlayback = false;
         mState = State.UNINITIALIZED;
     }
 
@@ -243,7 +245,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
                 @Override
                 public void onPrepared(MediaPlayer mediaPlayer) {
                     mIsVideoPrepared = true;
-                    if (mIsPlayCalled && mIsViewAvailable) {
+                    if (mIsPlayCalled && mIsViewAvailable && !mPreventPlayback) {
                         log("Player is prepared and play() was called.");
                         play();
                     }
@@ -370,6 +372,13 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     }
 
     /**
+     * Prevent playback from callbacks - onSurfaceTextureAvailable and media player prepared
+     */
+    public void preventPlayback() {
+        mPreventPlayback = true;
+    }
+
+    /**
      * @see android.media.MediaPlayer#setLooping(boolean)
      */
     public void setLooping(boolean looping) {
@@ -423,7 +432,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
             updateTextureViewSize();
 
-            if (mIsDataSourceSet && mIsPlayCalled && mIsVideoPrepared) {
+            if (mIsDataSourceSet && mIsPlayCalled && mIsVideoPrepared && !mPreventPlayback) {
                 log("View is available and play() was called.");
                 play();
             }
