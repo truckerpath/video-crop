@@ -424,7 +424,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
         Log.e("OnVideo","Surface Available");
-        if(mState != State.END) {
+        if(mState != State.END && !mPreventPlayback) {
 
             Surface surface = new Surface(surfaceTexture);
             mMediaPlayer.setSurface(surface);
@@ -432,7 +432,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
             updateTextureViewSize();
 
-            if (mIsDataSourceSet && mIsPlayCalled && mIsVideoPrepared && !mPreventPlayback) {
+            if (mIsDataSourceSet && mIsPlayCalled && mIsVideoPrepared) {
                 log("View is available and play() was called.");
                 play();
             }
