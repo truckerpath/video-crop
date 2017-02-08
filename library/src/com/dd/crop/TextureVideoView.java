@@ -60,6 +60,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     private ScaleType mScaleType;
     private State mState;
+    private LogCallback logCallback;
 
     public enum ScaleType {
         CENTER_CROP, TOP, BOTTOM
@@ -67,6 +68,10 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     public enum State {
         UNINITIALIZED, PLAY, STOP, PAUSE, END
+    }
+
+    public interface LogCallback {
+        void onLogMessageReceived(String message);
     }
 
     public TextureVideoView(Context context) {
@@ -90,6 +95,14 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
         setSurfaceTextureListener(this);
     }
 
+    public LogCallback getLogCallback() {
+        return logCallback;
+    }
+
+    public void setLogCallback(LogCallback logCallback) {
+        this.logCallback = logCallback;
+    }
+
     public void setScaleType(ScaleType scaleType) {
         mScaleType = scaleType;
     }
@@ -102,12 +115,11 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
         float scaleX = 1.0f;
         float scaleY = 1.0f;
 
-
         if (mVideoWidth > viewWidth && mVideoHeight > viewHeight) {
             //TODO: need to verify logic for larger video sizes
             scaleX = mVideoWidth / viewWidth;
             scaleY = mVideoHeight / viewHeight;
-        } else if (mVideoWidth/mVideoHeight > viewWidth/viewHeight) {
+        } else if (mVideoWidth / mVideoHeight > viewWidth / viewHeight) {
             scaleY = 1f;
             scaleX = (viewHeight / mVideoHeight) / (viewWidth / mVideoWidth);
         } else {
@@ -115,8 +127,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             scaleY = (viewWidth / mVideoWidth) / (viewHeight / mVideoHeight);
         }
 
-        Log.d("Video Details",viewHeight+" "+viewWidth);
-
+        log("Video Details " + viewHeight + " " + viewWidth);
 
         // Calculate pivot points, in our case crop from center
         int pivotPointX;
@@ -144,7 +155,6 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
         Matrix matrix = new Matrix();
         matrix.setScale(scaleX, scaleY, pivotPointX, pivotPointY);
 
-
         setTransform(matrix);
     }
 
@@ -170,8 +180,8 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             mMediaPlayer.setDataSource(path);
             mIsDataSourceSet = true;
             prepare();
-        } catch (IOException e) {
-            Log.d(TAG, e.getMessage());
+        } catch (Exception e) {
+            log(e.getMessage());
         }
     }
 
@@ -185,8 +195,8 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             mMediaPlayer.setDataSource(context, uri);
             mIsDataSourceSet = true;
             prepare();
-        } catch (IOException e) {
-            Log.d(TAG, e.getMessage());
+        } catch (Exception e) {
+            log(e.getMessage());
         }
     }
 
@@ -202,8 +212,8 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             mMediaPlayer.setDataSource(afd.getFileDescriptor(), startOffset, length);
             mIsDataSourceSet = true;
             prepare();
-        } catch (IOException e) {
-            Log.d(TAG, e.getMessage());
+        } catch (Exception e) {
+            log(e.getMessage());
         }
     }
 
@@ -225,7 +235,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    if(!mp.isLooping()) {
+                    if (!mp.isLooping()) {
                         mState = State.END;
                         log("Video has ended.");
 
@@ -257,19 +267,19 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             });
 
         } catch (IllegalArgumentException e) {
-            Log.d(TAG, e.getMessage());
+            log(e.getMessage());
         } catch (SecurityException e) {
-            Log.d(TAG, e.getMessage());
+            log(e.getMessage());
         } catch (IllegalStateException e) {
             e.printStackTrace();
-            Log.d(TAG, e.toString());
+            log(e.toString());
         }
     }
 
     /**
      * Play or resume video. Video will be played as soon as view is available and media player is
      * prepared.
-     *
+     * <p>
      * If video is stopped or ended and play() method was called, video will start over.
      */
     public void play() {
@@ -302,7 +312,7 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             return;
         }
 
-        if(mState == State.END ){
+        if (mState == State.END) {
             log("play() called but video ended");
             return;
         }
@@ -315,7 +325,12 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             return;
         }
 
-        if(haveToSeek){
+        if (mMediaPlayer == null) {
+            log("play() mediaPlayer is null");
+            return;
+        }
+
+        if (haveToSeek) {
             mMediaPlayer.seekTo(currentPosition);
             haveToSeek = false;
         }
@@ -343,6 +358,11 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
             return;
         }
 
+        if (mMediaPlayer == null) {
+            log("pause() mediaPlayer is null");
+            return;
+        }
+
         mState = State.PAUSE;
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
@@ -361,6 +381,11 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
         if (mState == State.END) {
             log("stop() was called but video already ended.");
+            return;
+        }
+
+        if (mMediaPlayer == null) {
+            log("stop() mediaPlayer is null");
             return;
         }
 
@@ -399,9 +424,13 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
         return mMediaPlayer.getDuration();
     }
 
-    static void log(String message) {
+    void log(String message) {
         if (LOG_ON) {
             Log.d(TAG, message);
+
+            if (logCallback != null) {
+                logCallback.onLogMessageReceived(message);
+            }
         }
     }
 
@@ -423,8 +452,8 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-        Log.e("OnVideo","Surface Available");
-        if(mState != State.END && !mPreventPlayback) {
+        log("Surface Available");
+        if (mState != State.END && !mPreventPlayback && mMediaPlayer != null) {
 
             Surface surface = new Surface(surfaceTexture);
             mMediaPlayer.setSurface(surface);
@@ -445,7 +474,11 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
 
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        Log.e("OnVideo","Surface Destroy");
+        log("Surface Destroy");
+        if (mMediaPlayer == null) {
+            return false;
+        }
+
         currentPosition = mMediaPlayer.getCurrentPosition();
         mMediaPlayer.release();
         mMediaPlayer = null;
@@ -457,33 +490,33 @@ public class TextureVideoView extends TextureView implements TextureView.Surface
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
     }
 
-    public boolean isPlaying(){
+    public boolean isPlaying() {
         return mMediaPlayer.isPlaying();
     }
 
-    public void releasePlayer(){
+    public void releasePlayer() {
         // cannot use media player after this
         mState = State.END;
         mMediaPlayer.release();
     }
 
-    public void seekToCurrent(){
+    public void seekToCurrent() {
         haveToSeek = true;
     }
 
-    public boolean isSurfaceAvailable(){
+    public boolean isSurfaceAvailable() {
         return mIsViewAvailable;
     }
 
-    public void muteAudio(){
-        if(mMediaPlayer!= null){
-            mMediaPlayer.setVolume(0,0);
+    public void muteAudio() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.setVolume(0, 0);
         }
     }
 
-    public void unMuteAudio(){
-        if(mMediaPlayer!= null){
-            mMediaPlayer.setVolume(1,1);
+    public void unMuteAudio() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.setVolume(1, 1);
         }
     }
 
